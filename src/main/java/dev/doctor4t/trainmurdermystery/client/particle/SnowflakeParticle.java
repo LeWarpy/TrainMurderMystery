@@ -4,13 +4,26 @@ import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.particle.*;
+import net.minecraft.client.render.Camera;
+import net.minecraft.client.render.VertexConsumer;
 import net.minecraft.client.world.ClientWorld;
 import net.minecraft.particle.SimpleParticleType;
-import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.MathHelper;
+import org.joml.Quaternionf;
 
 public class SnowflakeParticle extends SpriteBillboardParticle {
 	private final float yRand;
 	private final float zRand;
+
+	private float angleX;
+	private float angleY;
+	private float angleZ;
+	private float prevAngleX;
+	private float prevAngleY;
+	private float prevAngleZ;
+	private final float angleRandX;
+	private final float angleRandY;
+	private final float angleRandZ;
 
 	public SnowflakeParticle(ClientWorld world, double x, double y, double z, double velocityX, double velocityY, double velocityZ, SpriteProvider spriteProvider) {
 		super(world, x, y, z, velocityX, velocityY, velocityZ);
@@ -21,6 +34,10 @@ public class SnowflakeParticle extends SpriteBillboardParticle {
 
 		this.zRand = world.random.nextFloat() * 2 - 1;
 		this.yRand = world.random.nextFloat() * 2 - 1;
+
+		this.angleRandX = (world.random.nextFloat() * 2 - 1) * .1f;
+		this.angleRandY = (world.random.nextFloat() * 2 - 1) * .1f;
+		this.angleRandZ = (world.random.nextFloat() * 2 - 1) * .1f;
 
 		this.maxAge = 30 + world.random.nextInt(10);
 		this.scale = .1f + world.random.nextFloat() * .1f;
@@ -35,15 +52,36 @@ public class SnowflakeParticle extends SpriteBillboardParticle {
 
 	public void tick() {
 		super.tick();
-		this.alpha+=0.01f;
+		this.alpha += 0.01f;
 
 		float v = .2f;
 		this.velocityZ = Math.sin(this.zRand + this.age / 2f + MinecraftClient.getInstance().getRenderTickCounter().getTickDelta(true)) * v;
 		this.velocityY = -.1f + Math.sin(this.yRand + this.age / 2f + MinecraftClient.getInstance().getRenderTickCounter().getTickDelta(true)) * v;
 
+		this.prevAngleX = angleX;
+		this.prevAngleY = angleY;
+		this.prevAngleZ = angleZ;
+
+		this.angleX += angleRandX;
+		this.angleY += angleRandY;
+		this.angleZ += angleRandZ;
+
 		if (this.onGround || this.velocityX == 0) {
 			this.markDead();
 		}
+	}
+
+	@Override
+	public void buildGeometry(VertexConsumer vertexConsumer, Camera camera, float tickDelta) {
+		Quaternionf quaternionf = new Quaternionf();
+		this.getRotator().setRotation(quaternionf, camera, tickDelta);
+		quaternionf.rotateXYZ(
+				MathHelper.lerp(tickDelta, this.prevAngleX, this.angleX),
+				MathHelper.lerp(tickDelta, this.prevAngleY, this.angleY),
+				MathHelper.lerp(tickDelta, this.prevAngleZ, this.angleZ)
+		);
+
+		this.method_60373(vertexConsumer, camera, quaternionf, tickDelta);
 	}
 
 	@Environment(EnvType.CLIENT)
