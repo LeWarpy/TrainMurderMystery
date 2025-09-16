@@ -40,6 +40,7 @@ import java.util.*;
 
 public class TrainMurderMysteryClient implements ClientModInitializer {
     private static float trainSpeed;
+    private static boolean prevGameRunning;
     private static WorldGameComponent GAME_COMPONENT;
 
     public static final Map<UUID, PlayerListEntry> PLAYER_ENTRIES_CACHE = Maps.newHashMap();
@@ -138,17 +139,21 @@ public class TrainMurderMysteryClient implements ClientModInitializer {
         OptionLocker.overrideSoundCategoryVolume("ambient", 1.0);
         OptionLocker.overrideSoundCategoryVolume("voice", 1.0);
 
-
         // Item tooltips
         TMMItemTooltips.addTooltips();
 
-        // Cache player entries
+        // Cache player entries + select last slot at start of game
         ClientTickEvents.START_WORLD_TICK.register(clientWorld -> {
             for (AbstractClientPlayerEntity player : clientWorld.getPlayers()) {
                 if (!PLAYER_ENTRIES_CACHE.containsKey(player.getUuid())) {
                     PLAYER_ENTRIES_CACHE.put(player.getUuid(), MinecraftClient.getInstance().getNetworkHandler().getPlayerListEntry(player.getUuid()));
                 }
             }
+
+            if (!prevGameRunning && GAME_COMPONENT.isRunning()) {
+                MinecraftClient.getInstance().player.getInventory().selectedSlot = 8;
+            }
+            prevGameRunning = GAME_COMPONENT.isRunning();
         });
 
         // Instinct keybind
