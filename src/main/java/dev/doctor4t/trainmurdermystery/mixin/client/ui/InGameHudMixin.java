@@ -70,9 +70,9 @@ public class InGameHudMixin {
 
     @WrapMethod(method = "renderSleepOverlay")
     private void tmm$overrideSleepOverlay(DrawContext context, RenderTickCounter tickCounter, Operation<Void> original) {
-        if (TMMGameLoop.gameComponent != null) {
+        if (TMMClient.GAME_COMPONENT != null) {
             // game start fade in
-            float fadeIn = TMMGameLoop.gameComponent.getFadeIn();
+            float fadeIn = TMMClient.GAME_COMPONENT.getFadeIn();
             float tickDelta = 0; //MinecraftClient.getInstance().getRenderTickCounter().getTickDelta(false);
             if (fadeIn >= 0) {
                 this.client.getProfiler().push("tmmFadeIn");
@@ -84,7 +84,7 @@ public class InGameHudMixin {
             }
 
             // game stop fade out
-            float fadeOut = TMMGameLoop.gameComponent.getFadeOut();
+            float fadeOut = TMMClient.GAME_COMPONENT.getFadeOut();
             if (fadeOut >= 0) {
                 this.client.getProfiler().push("tmmFadeOut");
                 float fadeAlpha = MathHelper.lerp(Math.min(fadeOut / TMMGameConstants.FADE_TIME + tickDelta, 1), 0f, 1f);
