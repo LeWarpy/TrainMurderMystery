@@ -195,6 +195,10 @@ public class GameWorldComponent implements AutoSyncedComponent, ServerTickingCom
         this.sync();
     }
 
+    public boolean isLockedToSupporters() {
+        return lockedToSupporters;
+    }
+
     public void setLockedToSupporters(boolean lockedToSupporters) {
         this.lockedToSupporters = lockedToSupporters;
     }
@@ -272,23 +276,12 @@ public class GameWorldComponent implements AutoSyncedComponent, ServerTickingCom
 
         ServerWorld serverWorld = (ServerWorld) this.world;
 
-        if (world.getTime() % 100 == 0) {
-            List<ServerPlayerEntity> toDisconnect = new ArrayList<>();
-
+        // if not running and spectators or not in lobby reset them
+        if (world.getTime() % 20 == 0) {
             for (ServerPlayerEntity player : serverWorld.getPlayers()) {
-                // if not running and spectators or not in lobby reset them
                 if (!isRunning() && (player.isSpectator() || (GameFunctions.isPlayerAliveAndSurvival(player) && GameConstants.PLAY_AREA.contains(player.getPos())))) {
                     GameFunctions.resetPlayer(player);
                 }
-
-                // server lock to supporters
-                if (lockedToSupporters && !TMM.isSupporter(player)) {
-                    toDisconnect.add(player);
-                }
-            }
-
-            for (ServerPlayerEntity player : toDisconnect) {
-                player.networkHandler.disconnect(Text.literal("Server is reserved to doctor4t supporters."));
             }
         }
 

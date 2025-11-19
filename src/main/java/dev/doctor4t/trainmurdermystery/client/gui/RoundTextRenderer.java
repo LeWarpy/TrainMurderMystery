@@ -13,6 +13,7 @@ import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.network.ClientPlayerEntity;
+import net.minecraft.client.network.PlayerListEntry;
 import net.minecraft.client.util.SkinTextures;
 import net.minecraft.sound.SoundCategory;
 import net.minecraft.text.Text;
@@ -138,23 +139,26 @@ public class RoundTextRenderer {
                             killers++;
                         }
                     }
-                    var texture = TMMClient.PLAYER_ENTRIES_CACHE.get(entry.player().getId()).getSkinTextures().texture();
-                    if (texture != null) {
-                        RenderSystem.enableBlend();
-                        context.getMatrices().push();
-                        context.getMatrices().translate(8, 0, 0);
-                        var offColour = entry.wasDead() ? 0.4f : 1f;
-                        context.drawTexturedQuad(texture, 0, 8, 0, 8, 0, 8 / 64f, 16 / 64f, 8 / 64f, 16 / 64f, 1f, offColour, offColour, 1f);
-                        context.getMatrices().translate(-0.5, -0.5, 0);
-                        context.getMatrices().scale(1.125f, 1.125f, 1f);
-                        context.drawTexturedQuad(texture, 0, 8, 0, 8, 0, 40 / 64f, 48 / 64f, 8 / 64f, 16 / 64f, 1f, offColour, offColour, 1f);
-                        context.getMatrices().pop();
-                    }
-                    if (entry.wasDead()) {
-                        context.getMatrices().translate(13, 0, 0);
-                        context.getMatrices().scale(2f, 1f, 1f);
-                        context.drawText(renderer, "x", -renderer.getWidth("x") / 2, 0, 0xE10000, false);
-                        context.drawText(renderer, "x", -renderer.getWidth("x") / 2, 1, 0x550000, false);
+                    PlayerListEntry playerListEntry = TMMClient.PLAYER_ENTRIES_CACHE.get(entry.player().getId());
+                    if (playerListEntry != null) {
+                        var texture = playerListEntry.getSkinTextures().texture();
+                        if (texture != null) {
+                            RenderSystem.enableBlend();
+                            context.getMatrices().push();
+                            context.getMatrices().translate(8, 0, 0);
+                            var offColour = entry.wasDead() ? 0.4f : 1f;
+                            context.drawTexturedQuad(texture, 0, 8, 0, 8, 0, 8 / 64f, 16 / 64f, 8 / 64f, 16 / 64f, 1f, offColour, offColour, 1f);
+                            context.getMatrices().translate(-0.5, -0.5, 0);
+                            context.getMatrices().scale(1.125f, 1.125f, 1f);
+                            context.drawTexturedQuad(texture, 0, 8, 0, 8, 0, 40 / 64f, 48 / 64f, 8 / 64f, 16 / 64f, 1f, offColour, offColour, 1f);
+                            context.getMatrices().pop();
+                        }
+                        if (entry.wasDead()) {
+                            context.getMatrices().translate(13, 0, 0);
+                            context.getMatrices().scale(2f, 1f, 1f);
+                            context.drawText(renderer, "x", -renderer.getWidth("x") / 2, 0, 0xE10000, false);
+                            context.drawText(renderer, "x", -renderer.getWidth("x") / 2, 1, 0x550000, false);
+                        }
                     }
                     context.getMatrices().pop();
                 }

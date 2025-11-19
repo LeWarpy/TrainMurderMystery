@@ -2,16 +2,19 @@ package dev.doctor4t.trainmurdermystery;
 
 import com.google.common.reflect.Reflection;
 import dev.doctor4t.trainmurdermystery.block.DoorPartBlock;
+import dev.doctor4t.trainmurdermystery.cca.GameWorldComponent;
 import dev.doctor4t.trainmurdermystery.command.*;
 import dev.doctor4t.trainmurdermystery.command.argument.TMMGameModeArgumentType;
 import dev.doctor4t.trainmurdermystery.command.argument.TimeOfDayArgumentType;
 import dev.doctor4t.trainmurdermystery.game.GameConstants;
 import dev.doctor4t.trainmurdermystery.index.*;
 import dev.doctor4t.trainmurdermystery.util.*;
+import dev.upcraft.datasync.api.DataSyncAPI;
 import dev.upcraft.datasync.api.util.Entitlements;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.command.v2.ArgumentTypeRegistry;
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
+import net.fabricmc.fabric.api.entity.event.v1.ServerPlayerEvents;
 import net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.command.argument.serialize.ConstantArgumentSerializer;
@@ -19,6 +22,7 @@ import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.server.world.ServerWorld;
 import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.BlockPos;
@@ -70,6 +74,16 @@ public class TMM implements ModInitializer {
             AutoStartCommand.register(dispatcher);
             LockToSupportersCommand.register(dispatcher);
         }));
+
+        // server lock to supporters
+        ServerPlayerEvents.JOIN.register(player -> {
+            DataSyncAPI.refreshAllPlayerData(player.getUuid()).thenRunAsync(() -> {
+                // check if player is supporter now, if not kick
+                if (GameWorldComponent.KEY.get(player.getWorld()).isLockedToSupporters() && !TMM.isSupporter(player)) {
+                    player.networkHandler.disconnect(Text.literal("Server is reserved to doctor4t supporters."));
+                }
+            }, player.getWorld().getServer());
+        });
 
         PayloadTypeRegistry.playS2C().register(ShootMuzzleS2CPayload.ID, ShootMuzzleS2CPayload.CODEC);
         PayloadTypeRegistry.playS2C().register(PoisonUtils.PoisonOverlayPayload.ID, PoisonUtils.PoisonOverlayPayload.CODEC);
